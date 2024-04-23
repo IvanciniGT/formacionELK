@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+    nginx:
+        container_name: minginx
+        image:          nginx:latest
+        ports:
+            - 8888:80
+        volumes:
+            - /home/ubuntu/environment/curso:/curso
+        environemnt:
+            ENV1: valor1
+            #- ENV1=valor1
+#docker compose up   -d
+#docker compose down -v
+#               start
+#               stop
+#               restart
+
+# docker-compose ANTIGUAMENTE era un programa independiente... Hoy en día compose es un verbo más de docker

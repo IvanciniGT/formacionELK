@@ -341,7 +341,7 @@ Ahora, al hacer una búsqueda
     Podría haber tenido un INDICE con los ingredientes principales:
     
     | ingrediente principal | ubicacion |
-    |-----------------------|-----------|
+    |-----------------------|-----------|   De datos tengo 10Kbs... pero de blancos tengo 30Kbs = Fichero 40Kbs en disco
     |                       |           |
     | Alcachofas            | 8         |
     |                       |           |
@@ -527,7 +527,7 @@ Me puede interesar paralelizar el trabajo, teniendo muchos LUCENES que vayan ind
 ES Se convierte en un ORQUESTADOR de LUCENES.
 Esa colección de LUCENES (en ES, a cada LUCENE se le denomina SHARD... más o menos) es a lo que en ES denominamos INDICE
 
-
+    
     ElasticSearch
             |
         -------------- INDICE A -------------- y se encarga de indexar cierto tipo de documentos
@@ -536,7 +536,7 @@ Esa colección de LUCENES (en ES, a cada LUCENE se le denomina SHARD... más o m
         Lucene 1(r2)     Lucene 2(r2)   Lucene 3(r2)    Shards de replicación       |
         ---------------------------------------------                   
         Shard 1          Shard 2        Shard 3
-
+    
         Un SHARD es un LUCENE
 
 Os había dicho que un shard +- equivale a un LUCENE... pero no es exactamente así... O SI.
@@ -774,7 +774,7 @@ Y donde lo mandan? Lo pueden mandar a ES? SI... pero qué problemas tendría?
   - Analizar el éxito de una campaña comercial que hemos lanzado.
 
 Por todo ello, al final montamos entre medias de los agentes BEAT y el ES, un LOGSTASH
-
+    
     Máquina 1
         httpd
             v
