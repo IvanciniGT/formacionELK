@@ -266,3 +266,44 @@ Kubernetes es un gestor de gestores de contenedores apto para entornos de produc
     - Regras de firewall        NETWORK POLICY
     - Escalabilidad             HPA
     
+## Formación del cluster
+
+Cuando se forma un cluster de ES, los nodos se tienen que empezar a comunicar entre si.
+En las primeras versiones de ES, se hacian comunicaciones MULTICAST: Cad nodo daba un grito al aire en la red
+
+Esto se cambió... y hoy en día estas comuniociones se hacen UNICAST:
+Yo nodo X voy a buscar a un Nodo Y para ver si le encuentro y hacerme amigo de él
+    
+    Nodo01 -> Nodo02, Nodo03
+    Nodo02 -> Nodo03            Por si aca, el Node01 no levanta. REDUNDANTE
+    Nodo03
+    
+    Esto sería una configuración más que suficiente en cualquier escenario para dyscovery nodes
+
+    
+    master01
+      - cluster.initial_master_nodes=master01, master02
+      - discovery.seed_hosts=master02
+      - node.roles=[master]
+    master02
+      - cluster.initial_master_nodes=master01, master02
+      - discovery.seed_hosts=master01
+      - node.roles=[master]
+    data01
+      - discovery.seed_hosts=master01, master02
+      - node.roles=[data,master,voting-only] # Maestro de mentirijilla
+    data02
+      - discovery.seed_hosts=master01, master02
+      - node.roles=[data]
+    data03
+      - discovery.seed_hosts=master01, master02
+      - node.roles=[data]
+    coordinator01
+      - discovery.seed_hosts=master01, master02
+      - node.roles=[]
+    coordinator02
+      - discovery.seed_hosts=master01, master02
+      - node.roles=[]
+    
+    
+    
