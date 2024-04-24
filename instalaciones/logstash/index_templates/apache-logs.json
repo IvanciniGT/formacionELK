@@ -1,0 +1,21 @@
+{
+    "index_patterns": ["apache-logs-*"],
+    "settings": {
+        "index": {
+          "number_of_shards": "4",
+          "number_of_replicas": "2",
+        }
+      },
+    "mappings": {
+        "properties": {
+    
+          "source": {
+            "properties": {
+              "address": {
+                "type": "ip"
+              }
+            }
+          }
+        }
+  }
+}
