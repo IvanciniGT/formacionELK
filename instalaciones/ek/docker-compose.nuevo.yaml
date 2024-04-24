@@ -1,0 +1,489 @@
+version: "2.2"
+
+services:
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs # named Volume: certs
+    user: "0"
+    command: >
+      bash -c '
+        if [ x${ELASTIC_PASSWORD} == x ]; then
+          echo "Set the ELASTIC_PASSWORD environment variable in the .env file";
+          exit 1;
+        elif [ x${KIBANA_PASSWORD} == x ]; then
+          echo "Set the KIBANA_PASSWORD environment variable in the .env file";
+          exit 1;
+        fi;
+        if [ ! -f config/certs/ca.zip ]; then
+          echo "Creating CA";
+          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;
+          unzip config/certs/ca.zip -d config/certs;
+        fi;
+        if [ ! -f config/certs/certs.zip ]; then
+          echo "Creating certs";
+          echo -ne \
+          "instances:\n"\
+          "  - name: master1\n"\
+          "    dns:\n"\
+          "      - master1\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: master2\n"\
+          "    dns:\n"\
+          "      - master2\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: data1\n"\
+          "    dns:\n"\
+          "      - data1\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: data2\n"\
+          "    dns:\n"\
+          "      - data2\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: data3\n"\
+          "    dns:\n"\
+          "      - data3\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: coordinator1\n"\
+          "    dns:\n"\
+          "      - coordinator1\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: coordinator2\n"\
+          "    dns:\n"\
+          "      - coordinator2\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          > config/certs/instances.yml;
+          bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
+          unzip config/certs/certs.zip -d config/certs;
+        fi;
+        echo "Setting file permissions"
+        chown -R root:root config/certs;
+        find . -type d -exec chmod 750 \{\} \;;
+        find . -type f -exec chmod 640 \{\} \;;
+        echo "Waiting for Elasticsearch availability";
+        until curl -s --cacert config/certs/ca/ca.crt https://master1:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+        echo "Setting kibana_system password";
+        until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://master1:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        echo "All done!";
+      '
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f config/certs/master1/master1.crt ]"]
+      interval: 1s
+      timeout: 5s
+      retries: 120
+    networks:
+      - red-es
+
+  master1:  #(**1**) Este nombre se usa copmo fqdn (nombre resoluble en red mediante el DNS interno de Docker para llegar al contenedor)
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/master1:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[master]
+      - node.name=master1                              # nombre del nodo
+      - cluster.name=${CLUSTER_NAME}                # nombre del cluster al que pertenece
+      - cluster.initial_master_nodes=master1,master2 # potenciales nodos que pueden ejercer de maestros
+                                                    # master1, master2 y data1 se refiere a: node.name
+                                                    # Los nomrbes que ES asigna internamente a cada nodo
+                                                    # Ésto solo hay que configurarlo en los nodos maestros
+      - discovery.seed_hosts=master2,data1              # A quién me presento
+                                                    # master2, data1... A qué se refieren estos nombres? (**1**)
+                                                    # A la IP o FQDN de las máquinas donde están procesos corriendo de ES
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true # Queremos activar el modulo de comunicaciones seguras
+      - xpack.security.http.ssl.enabled=true    # Lo quiero usar para las comunicaciones externas al cluster: 9200 -> https
+      - xpack.security.http.ssl.key=certs/master1/master1.key
+      - xpack.security.http.ssl.certificate=certs/master1/master1.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true  # Las comunicaciones internas (entre nodos del cluster) también las quiero por https: 9300
+      - xpack.security.transport.ssl.key=certs/master1/master1.key
+      - xpack.security.transport.ssl.certificate=certs/master1/master1.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+  master2:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/master2:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[master]
+      - node.name=master2
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=master1,master2
+      - discovery.seed_hosts=master1,data1
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/master2/master2.key
+      - xpack.security.http.ssl.certificate=certs/master2/master2.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/master2/master2.key
+      - xpack.security.transport.ssl.certificate=certs/master2/master2.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+  data1:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/data1:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[data,master,voting-only]
+      - node.name=data1
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.seed_hosts=master1,master2
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/data1/data1.key
+      - xpack.security.http.ssl.certificate=certs/data1/data1.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/data1/data1.key
+      - xpack.security.transport.ssl.certificate=certs/data1/data1.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  data2:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/data2:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[data]
+      - node.name=data2
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.seed_hosts=master1,master2
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/data2/data2.key
+      - xpack.security.http.ssl.certificate=certs/data2/data2.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/data2/data2.key
+      - xpack.security.transport.ssl.certificate=certs/data2/data2.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+
+
+
+
+
+
+
+
+
+
+
+  data3:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/data3:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[data]
+      - node.name=data3
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.seed_hosts=master1,master2
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/data3/data3.key
+      - xpack.security.http.ssl.certificate=certs/data3/data3.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/data3/data3.key
+      - xpack.security.transport.ssl.certificate=certs/data3/data3.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+
+
+
+
+
+  coordinator1:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/coordinator1:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[]
+      - node.name=coordinator1
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.seed_hosts=master1,master2
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/coordinator1/coordinator1.key
+      - xpack.security.http.ssl.certificate=certs/coordinator1/coordinator1.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/coordinator1/coordinator1.key
+      - xpack.security.transport.ssl.certificate=certs/coordinator1/coordinator1.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    ports:
+      - ${ES_PORT}:9200
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+
+
+
+  coordinator2:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
+      - /home/ubuntu/environment/datos/coordinator2:/usr/share/elasticsearch/data
+    environment:
+      - node.roles=[]
+      - node.name=coordinator2
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.seed_hosts=master1,master2
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}        # contraseña para el usuario elastic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/coordinator2/coordinator2.key
+      - xpack.security.http.ssl.certificate=certs/coordinator2/coordinator2.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/coordinator2/coordinator2.key
+      - xpack.security.transport.ssl.certificate=certs/coordinator2/coordinator2.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+
+
+
+
+
+
+
+
+
+  kibana:
+    depends_on: # Me asegura que los ceritifcados están creados antes del arranque de este contenedor
+      setup:
+        condition: service_healthy
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    volumes:
+      - /home/ubuntu/environment/datos/certificados:/usr/share/kibana/config/certs
+      - /home/ubuntu/environment/datos/kibana:/usr/share/kibana/data
+    ports:
+      - ${KIBANA_PORT}:5601
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=https://coordinator1:9200 # coordinador1, coordinador2
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+    mem_limit: ${MEM_LIMIT}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - red-es
+
+networks:
+  red-es:
+    name: elastic
+
+#volumes:
+#  certs:
+#    driver: local # CRea una carpeta en el host... pero npi de donde.. ni es accesible por mi a priori
+                  # No es lo que quiero.
+                  # Por qué viene así? 
+                  # Garanmtiza que cualquier persona que descargue el fichero puede ejecutarlo, sn cambiar rutas
+#  esdata01:
+#    driver: local
+#  esdata02:
+#    driver: local
+#  esdata03:
+#    driver: local
+#  kibanadata:
+#    driver: local
