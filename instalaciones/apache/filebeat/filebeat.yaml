@@ -1,0 +1,8 @@
+filebeat.inputs:
+- type: filestream
+  id: logs-apache-filestream
+  paths:
+    - /tmp/logs/*
+
+output.console:
+  pretty: true

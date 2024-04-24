@@ -12,6 +12,15 @@ services:
         networks:
           - red-es
 
+    filebeat:
+        container_name: mi-filebeat
+        image:          docker.elastic.co/beats/filebeat:8.13.2
+        volumes:
+                      - /home/ubuntu/environment/datos/apache/log:/tmp/logs
+                      - ./filebeat/filebeat.yaml:/usr/share/filebeat/filebeat.yml:ro
+        networks:
+          - red-es
+
 networks:
   red-es:
     name: elastic
