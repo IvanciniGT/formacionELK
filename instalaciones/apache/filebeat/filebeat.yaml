@@ -4,5 +4,8 @@ filebeat.inputs:
   paths:
     - /tmp/logs/*
 
-output.console:
-  pretty: true
+#output.console:
+#  pretty: true
+  
+output.logstash:
+  hosts: ["logstash-filebeat:5044"]

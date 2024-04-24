@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+    logstash-filebeat: # Lo puedo usar como fqdn en red
+        container_name: mi-logstash-filebeat
+        image:          docker.elastic.co/logstash/logstash:8.13.2
+        volumes:
+                      - /home/ubuntu/environment/datos/apache/log:/tmp/logs
+                      - ./conf/pipeline-filebeat.conf:/usr/share/logstash/pipeline/logstash.conf
+        networks:
+          - red-es
+
+networks:
+  red-es:
+    name: elastic
+    external: true # Ya existe... no la gestionamos desde este fichero

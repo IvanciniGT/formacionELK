@@ -1,0 +1,35 @@
+{
+    "@timestamp" => 2024-04-24T09:48:09.200Z,
+          "tags" => [
+        [0] "beats_input_codec_plain_applied"
+    ],
+      "@version" => "1",
+           "ecs" => {
+        "version" => "8.0.0"
+    },
+       "message" => "172.20.0.1 - - [24/Apr/2024:08:38:13 +0000] \"GET / HTTP/1.1\" 200 45 \"-\" \"curl/7.81.0\"",
+         "agent" => {
+        "ephemeral_id" => "13934a0a-8c1a-4351-8b52-8b89dcd50470",
+                  "id" => "a539cb6e-2151-4844-953e-9ff19cc84cdb",
+                "type" => "filebeat",
+             "version" => "8.13.2",
+                "name" => "bf734c40cde2"
+    },
+         "event" => {
+        "original" => "172.20.0.1 - - [24/Apr/2024:08:38:13 +0000] \"GET / HTTP/1.1\" 200 45 \"-\" \"curl/7.81.0\""
+    },
+         "input" => {
+        "type" => "filestream"
+    },
+           "log" => {
+        "offset" => 86,
+          "file" => {
+                 "path" => "/tmp/logs/access_log",
+                "inode" => "1551712",
+            "device_id" => "66305"
+        }
+    },
+          "host" => {
+        "name" => "bf734c40cde2"
+    }
+}
