@@ -349,7 +349,7 @@ services:
       - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
       - /home/ubuntu/environment/datos/coordinator1:/usr/share/elasticsearch/data
     environment:
-      - node.roles=[]
+      #- node.roles=[]
       - node.name=coordinator1
       - cluster.name=${CLUSTER_NAME}
       - discovery.seed_hosts=master1,master2
@@ -397,7 +397,7 @@ services:
       - /home/ubuntu/environment/datos/certificados:/usr/share/elasticsearch/config/certs
       - /home/ubuntu/environment/datos/coordinator2:/usr/share/elasticsearch/data
     environment:
-      - node.roles=[]
+      #- node.roles=[]
       - node.name=coordinator2
       - cluster.name=${CLUSTER_NAME}
       - discovery.seed_hosts=master1,master2
