@@ -51,7 +51,7 @@ services:
         networks:
           - red-es
   
-  networks:
+networks:
     red-es:
       name: elastic
       external: true # Ya existe... no la gestionamos desde este fichero
