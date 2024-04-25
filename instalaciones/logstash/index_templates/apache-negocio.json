@@ -1,5 +1,5 @@
 {
-    "index_patterns": ["apache-logs-nuevos-*"],
+    "index_patterns": ["apache-negocio-*"],
     "priority": 200,
     "template": {
       "settings": {

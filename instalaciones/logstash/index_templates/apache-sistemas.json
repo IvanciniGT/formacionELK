@@ -1,0 +1,23 @@
+{
+    "index_patterns": ["apache-sistemas-*"],
+    "priority": 200,
+    "template": {
+      "settings": {
+        "index":{
+          "number_of_shards": 3,
+          "number_of_replicas": 1
+        }
+      },
+      "mappings": {
+          "properties": {
+            "source": {
+              "properties": {
+                "address": {
+                  "type": "ip"
+                }
+              }
+            }
+          }
+      }
+  }
+}
