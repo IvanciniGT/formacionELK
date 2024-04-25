@@ -1,5 +1,6 @@
 {
-    "index_patterns": ["apache-logs-*"],
+    "index_patterns": ["apache-logs-nuevos-*"],
+    "priority": 200,
     "template": {
       "settings": {
         "index":{
@@ -13,6 +14,17 @@
               "properties": {
                 "address": {
                   "type": "ip"
+                }
+              }
+            },
+            "geoip": {
+              "properties": {
+                "geo": {
+                  "properties": {
+                    "location": {
+                      "type": "geo_point"
+                    }
+                  }
                 }
               }
             }

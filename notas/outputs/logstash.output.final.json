@@ -1,0 +1,51 @@
+{
+    "geoip" => {
+        "geo" => {
+                 "postal_code" => "28043",
+                   "city_name" => "Madrid",
+              "continent_code" => "EU",
+             "region_iso_code" => "ES-M",
+                 "region_name" => "Madrid",
+                    "location" => {
+                                        "lon" => -3.6645,
+                                        "lat" => 40.4522
+                                    },
+                    "timezone" => "Europe/Madrid",
+            "country_iso_code" => "ES",
+                "country_name" => "Spain"
+        },
+         "ip" => "62.83.227.217"
+    },
+      "@version" => "1",
+          "host" => {
+        "name" => "cdec5fba7033"
+    },
+    "http" => {
+         "request" => {
+            "method" => "get"
+        },
+        "response" => {
+            "status_code" => 304
+        },
+         "version" => "1.1"
+    },
+    "@timestamp" => 2024-04-25T09:40:48.000Z,
+    "url" => {
+        "original" => "/"
+    },
+    "tags" => [
+        [0] "beats_input_codec_plain_applied"
+    ],
+    "user_agent" => {
+        "original" => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "log" => {
+        "offset" => 4993,
+          "file" => {
+            "path" => "/tmp/logs/access_log"
+        }
+    },
+    "source" => {
+        "address" => "62.83.227.217"
+    }
+}

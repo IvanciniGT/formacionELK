@@ -1,0 +1,50 @@
+{
+          "source": {
+            "address": "62.83.227.217"
+          },
+          "user_agent": {
+            "original": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+          },
+          "ecs": {
+            "version": "8.0.0"
+          },
+          "http": {
+            "response": {
+              "status_code": 304
+            },
+            "version": "1.1",
+            "request": {
+              "method": "GET"
+            }
+          },
+          "host": {
+            "name": "cdec5fba7033"
+          },
+          "input": {
+            "type": "filestream"
+          },
+          "@version": "1",
+          "url": {
+            "original": "/"
+          },
+          "timestamp": "25/Apr/2024:06:37:55 +0000",
+          "log": {
+            "offset": 981,
+            "file": {
+              "path": "/tmp/logs/access_log",
+              "device_id": "66305",
+              "inode": "1551712"
+            }
+          },
+          "@timestamp": "2024-04-25T07:51:23.064Z",
+          "agent": {
+            "id": "920e3180-c87b-47d8-915a-6087bb67fe0b",
+            "type": "filebeat",
+            "version": "8.13.2",
+            "ephemeral_id": "714f9328-1550-45d0-9295-370f426d8b68",
+            "name": "cdec5fba7033"
+          },
+          "tags": [
+            "beats_input_codec_plain_applied"
+          ]
+        }
