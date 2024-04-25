@@ -5,10 +5,17 @@ services:
         container_name: mi-logstash-filebeat
         image:          docker.elastic.co/logstash/logstash:8.13.2
         volumes:
-                      - /home/ubuntu/environment/datos/apache/log:/tmp/logs
                       - ./conf/pipeline-filebeat.conf:/usr/share/logstash/pipeline/logstash.conf
-                      - /home/ubuntu/environment/datos/certificados/ca:/usr/share/logstash/certs/ca
                       - ./index_templates:/tmp/index_templates
+
+                      - /home/ubuntu/environment/datos/certificados/ca:/usr/share/logstash/certs/ca
+        environment:
+          xpack.monitoring.enabled: "true"
+          xpack.monitoring.elasticsearch.ssl.certificate_authority: "/usr/share/logstash/certs/ca/ca.crt"
+          xpack.monitoring.elasticsearch.ssl.verification_mode: "certificate"
+          xpack.monitoring.elasticsearch.hosts: "https://coordinator1:9200"
+          xpack.monitoring.elasticsearch.username: "elastic"
+          xpack.monitoring.elasticsearch.password: "password"
         networks:
           - red-es
 
