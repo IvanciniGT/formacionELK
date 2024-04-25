@@ -73,6 +73,7 @@ services:
           chown -R root:root config/certs;
           find . -type d -exec chmod 750 \{\} \;;
           find . -type f -exec chmod 640 \{\} \;;
+
         fi;
         echo "Waiting for Elasticsearch availability";
         until curl -s --cacert config/certs/ca/ca.crt https://master1:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
