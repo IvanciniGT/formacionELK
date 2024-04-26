@@ -1,0 +1,11 @@
+heartbeat.monitors:
+- type: http
+  id: miapache
+  name: Mi servidor de apache
+  schedule: '@every 5s'
+  hosts: ["http://apache:80"]
+  check.response.status: [200, 304]
+
+
+output.logstash:
+  hosts: ["logstash-heartbeat:5044"]

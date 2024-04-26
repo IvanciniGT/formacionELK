@@ -21,6 +21,34 @@ services:
         networks:
           - red-es
 
+    heartbeat: # Una instalación del programa HEARTBEAT (contenedor)
+        container_name: mi-heartbeat
+        image:          docker.elastic.co/beats/heartbeat:8.13.2
+        volumes:
+                      - ./heartbeat/heartbeat.yaml:/usr/share/heartbeat/heartbeat.yml:ro
+        networks:
+          - red-es
+    
+    heartbeat-setup: # Crea en kibana unos dashboards autom.
+        container_name: mi-heartbeat-setup
+        image:          docker.elastic.co/beats/heartbeat:8.13.2
+        command:        
+            - 'sh'
+            - '-c'
+            - >
+                heartbeat setup 
+                -E setup.kibana.host=https://kibana:5601
+                -E setup.kibana.username=elastic
+                -E setup.kibana.password=password
+                -E output.elasticsearch.hosts=["https://coordinator1:9200"]
+                -E output.elasticsearch.ssl.certificate_authorities=["/tmp/certs/ca/ca.crt"]
+                -E output.elasticsearch.username=elastic
+                -E output.elasticsearch.password=password
+        volumes:
+               - /home/ubuntu/environment/datos/certificados/ca:/tmp/certs/ca
+        networks:
+          - red-es
+    
 networks:
   red-es:
     name: elastic

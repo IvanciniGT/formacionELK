@@ -1,0 +1,118 @@
+{
+      "@version" => "1",
+          "tags" => [
+        [0] "beats_input_raw_event"
+    ],
+           "ecs" => {
+        "version" => "8.0.0"
+    },
+         "state" => {
+        "flap_history" => [],
+          "started_at" => "2024-04-26T10:26:18.949696565Z",
+                  "up" => 109,
+                "down" => 0,
+                  "id" => "default-18f19f10cc5-0",
+         "duration_ms" => "540076",
+              "checks" => 109,
+              "status" => "up",
+                "ends" => nil
+    },
+         "event" => {
+           "type" => "heartbeat/summary",
+        "dataset" => "http"
+    },
+       "monitor" => {
+        "check_group" => "ad6d1ee1-03b8-11ef-9c51-0242ac14000c-1",
+                 "ip" => "172.20.0.9",
+           "duration" => {
+            "us" => 1566
+        },
+           "timespan" => {
+            "gte" => "2024-04-26T10:35:19.026Z",
+             "lt" => "2024-04-26T10:35:24.026Z"
+        },
+               "name" => "Mi servidor de apache",
+               "type" => "http",
+                 "id" => "miapache",
+             "status" => "up"
+    },
+         "agent" => {
+                  "id" => "cf76fa19-7da1-4d73-9629-ad0a336b4492",
+             "version" => "8.13.2",
+        "ephemeral_id" => "331d18bb-84d3-4193-9476-b1b80136fdf4",
+                "name" => "43173be3b82f",
+                "type" => "heartbeat"
+    },
+       "resolve" => {
+        "rtt" => {
+            "us" => 787
+        },
+         "ip" => "172.20.0.9"
+    },
+           "url" => {
+        "domain" => "apache",
+        "scheme" => "http",
+          "port" => 80,
+          "full" => "http://apache:80"
+    },
+    "@timestamp" => 2024-04-26T10:35:19.026Z,
+           "tcp" => {
+        "rtt" => {
+            "connect" => {
+                "us" => 157
+            }
+        }
+    },
+          "http" => {
+             "rtt" => {
+                      "total" => {
+                "us" => 662
+            },
+            "response_header" => {
+                "us" => 327
+            },
+                   "validate" => {
+                "us" => 444
+            },
+              "write_request" => {
+                "us" => 70
+            },
+                    "content" => {
+                "us" => 117
+            }
+        },
+        "response" => {
+                "headers" => {
+                 "Accept-Ranges" => "bytes",
+                  "Content-Type" => "text/html",
+                 "Last-Modified" => "Mon, 11 Jun 2007 18:53:14 GMT",
+                          "Date" => "Fri, 26 Apr 2024 10:35:19 GMT",
+                          "Etag" => "\"2d-432a5e4a73a80\"",
+                "Content-Length" => "45",
+                        "Server" => "Apache/2.4.59 (Unix)"
+            },
+              "mime_type" => "text/html; charset=utf-8",
+            "status_code" => 200,
+                   "body" => {
+                 "hash" => "f2dcc96deec8bca2facba9ad0db55c89f3c4937cd6d2d28e5c4869216ffa81cf",
+                "bytes" => 45
+            }
+        }
+    },
+       "summary" => {
+        "final_attempt" => true,
+         "max_attempts" => 1,
+          "retry_group" => "ad6d1ee1-03b8-11ef-9c51-0242ac14000c",
+              "attempt" => 1,
+                   "up" => 1,
+                 "down" => 0,
+               "status" => "up"
+    }
+}
+
+
+
+
+mi-logstash-heartbeat  | }
+mi-logstash-heartbeat  | [2024-04-26T10:41:39,208][WARN ][logstash.outputs.elasticsearch][main][c997314488f53dec9402b330707aa8d9c36744c2fab9b9546773d855bea0e89a] Could not index event to Elasticsearch. {:status=>404, :action=>["index", {:_id=>nil, :_index=>"heartbeat-apache", :routing=>nil}, {"@version"=>"1", "tags"=>["beats_input_raw_event"], "ecs"=>{"version"=>"8.0.0"}, "event"=>{"dataset"=>"http", "type"=>"heartbeat/summary"}, "state"=>{"flap_history"=>[], "started_at"=>"2024-04-26T10:26:18.949696565Z", "up"=>183, "down"=>0, "id"=>"default-18f19f10cc5-0", "duration_ms"=>"910133", "status"=>"up", "checks"=>183, "ends"=>nil}, "monitor"=>{"check_group"=>"89ff3e8b-03b9-11ef-9c51-0242ac14000c-1", "ip"=>"172.20.0.9", "timespan"=>{"gte"=>"2024-04-26T10:41:29.083Z", "lt"=>"2024-04-26T10:41:34.083Z"}, "duration"=>{"us"=>2100}, "name"=>"Mi servidor de apache", "type"=>"http", "id"=>"miapache", "status"=>"up"}, "agent"=>{"id"=>"cf76fa19-7da1-4d73-9629-ad0a336b4492", "version"=>"8.13.2", "ephemeral_id"=>"331d18bb-84d3-4193-9476-b1b80136fdf4", "name"=>"43173be3b82f", "type"=>"heartbeat"}, "resolve"=>{"rtt"=>{"us"=>924}, "ip"=>"172.20.0.9"}, "url"=>{"domain"=>"apache", "scheme"=>"http", "port"=>80, "full"=>"http://apache:80"}, "@timestamp"=>2024-04-26T10:41:29.084Z, "tcp"=>{"rtt"=>{"connect"=>{"us"=>155}}}, "http"=>{"rtt"=>{"total"=>{"us"=>1073}, "response_header"=>{"us"=>346}, "validate"=>{"us"=>864}, "write_request"=>{"us"=>80}, "content"=>{"us"=>517}}, "response"=>{"headers"=>{"Accept-Ranges"=>"bytes", "Content-Type"=>"text/html", "Last-Modified"=>"Mon, 11 Jun 2007 18:53:14 GMT", "Date"=>"Fri, 26 Apr 2024 10:41:29 GMT", "Etag"=>"\"2d-432a5e4a73a80\"", "Content-Length"=>"45", "Server"=>"Apache/2.4.59 (Unix)"}, "mime_type"=>"text/html; charset=utf-8", "status_code"=>200, "body"=>{"hash"=>"f2dcc96deec8bca2facba9ad0db55c89f3c4937cd6d2d28e5c4869216ffa81cf", "bytes"=>45}}}, "summary"=>{"final_attempt"=>true, "max_attempts"=>1, "up"=>1, "down"=>0, "retry_group"=>"89ff3e8b-03b9-11ef-9c51-0242ac14000c", "attempt"=>1, "status"=>"up"}}], :response=>{"index"=>{"status"=>404, "error"=>{"type"=>"index_not_found_exception", "reason"=>"no such index [heartbeat-apache] and composable template [heartbeat-8.13.2, heartbeat-apache*] forbids index auto creation", "index_uuid"=>"_na_", "index"=>"heartbeat-apache"}}}}
+mi-logstash-heartbeat  | {
